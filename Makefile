@@ -1,5 +1,5 @@
 CC	= g++
-LIBS	= -lccn -lssl -lcrypto
+LIBS	= -lccn -lssl -lcrypto -lpthread
 DEFS    = -DTIXML_USE_STL -DDEBUG
 CFLAGS	= -c -Wall
 
