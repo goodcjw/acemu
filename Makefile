@@ -28,5 +28,5 @@ $(TARGET): $(OBJECTS)
 	$(CC) $(LIBS) $(OBJECTS) -o $@
 
 clean:
-	rm $(TARGET)
 	rm $(OBJECTS)
+	rm $(TARGET)
