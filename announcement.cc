@@ -1,5 +1,12 @@
 #include "announcement.h"
 #include "debugbox.h"
+#include "tinyxml.h"
+#include "base64.h"
+
+#include <sstream>
+#include <stdlib.h>
+
+using namespace std;
 
 #define REFRESH_INTERVAL 30 
 #define REMOVE_INTERVAL (2 * REFRESH_INTERVAL + 5) 
@@ -20,37 +27,19 @@ Announcement::Announcement()
 	memset(audioSessionKey, 0, KEY_LENGTH);
 }
 
-char * Announcement::base64(const unsigned char *input, int length)
-{
-    BIO *bmem, *b64;
-    BUF_MEM *bptr;
-
-    b64 = BIO_new(BIO_f_base64());
-    bmem = BIO_new(BIO_s_mem());
-    b64 = BIO_push(b64, bmem);
-    BIO_write(b64, input, length);
-    BIO_flush(b64);
-    BIO_get_mem_ptr(b64, &bptr);
-
-    char *buff = (char *)malloc(bptr->length);
-    memcpy(buff, bptr->data, bptr->length-1);
-    buff[bptr->length-1] = 0;
-
-    BIO_free_all(b64);
-
-    return buff;
-}
-
 void Announcement::setDigest(unsigned char *hash) {
 	if (hash == NULL)
 		return;
 	
 	memcpy(digest, hash, SHA_DIGEST_LENGTH);
-    string ds(base64((unsigned char *)digest, SHA_DIGEST_LENGTH));
-    string hs(base64((unsigned char *)hash, SHA_DIGEST_LENGTH));
-
+    char * c_ds = base64((unsigned char *)digest, SHA_DIGEST_LENGTH);
+    char * c_hs = base64((unsigned char *)hash, SHA_DIGEST_LENGTH);
+    string ds(c_ds);
+    string hs(c_hs);
 	debug("digest is " + ds);
 	debug("hash is " + hs);
+    free(c_ds);
+    free(c_hs);
 }
 
 bool Announcement::equalDigest(unsigned char *hash) {
@@ -58,8 +47,12 @@ bool Announcement::equalDigest(unsigned char *hash) {
 	if (hash == NULL)
 		return false;
 	
-    string ds(base64((unsigned char *)digest, SHA_DIGEST_LENGTH));
-    string hs(base64((unsigned char *)hash, SHA_DIGEST_LENGTH));
+    char * c_ds = base64((unsigned char *)digest, SHA_DIGEST_LENGTH);
+    char * c_hs = base64((unsigned char *)hash, SHA_DIGEST_LENGTH);
+    string ds(c_ds);
+    string hs(c_hs);
+    free(c_ds);
+    free(c_hs);
     
 	debug("digest is " + ds);
 	debug("hash is " + hs);
@@ -74,15 +67,15 @@ bool Announcement::equalDigest(unsigned char *hash) {
 }
 
 void Announcement::copy(Announcement *a) {
-	this->own = a->own;
-	this->confName = a->confName;
-	this->organizer = a->organizer;
+	confName = string(a->confName);
+	organizer = string(a->organizer);
 	this->email = a->email;
+	this->own = a->own;
 	this->audio = a->audio;
 	this->video = a->video;
 	this->desc = a->desc;
 	this->date = a->date;
-	//this->time = a->time;
+	this->str_time = a->str_time;
 	this->hours = a->hours;
 	this->minutes = a->minutes;
 	this->uuid = a->uuid;
@@ -107,6 +100,143 @@ void Announcement::initAudioSessionKey() {
 	while(res == 0) {
 		res = RAND_bytes(audioSessionKey, KEY_LENGTH);
 	}
+}
+
+string Announcement::toXml() {
+
+    stringstream ss;
+    string out;
+
+	out.append("<conference>");
+	out.append("<audio>");
+	if (getAudio()) 
+		out.append("true");
+	else
+		out.append("false");
+	out.append("</audio>");
+
+	out.append("<video>");
+	if (getVideo()) 
+		out.append("true");
+	else
+		out.append("false");
+	out.append("</video>");
+
+	out.append("<confName>");
+	out.append(getConfName());
+	out.append("</confName>");
+		
+	out.append("<organizer>");
+	out.append(getOrganizer());
+	out.append("</organizer>");
+
+	out.append("<email>");
+	out.append(getEmail());
+	out.append("</email>");
+
+	out.append("<desc>");
+	out.append(getDesc());
+	out.append("</desc>");
+
+	out.append("<date>");
+	out.append(getDate());
+	out.append("</date>");
+
+	out.append("<time>");
+	out.append(getTime());
+	out.append("</time>");
+
+	out.append("<hours>");
+    ss << getHours();
+    string str_hours;
+    ss >> str_hours;
+	out.append(str_hours);
+	out.append("</hours>");
+
+	out.append("<minutes>");
+    ss << getMinutes();
+    string str_minutes;
+    ss >> str_minutes;
+	out.append(str_minutes);
+	out.append("</minutes>");
+
+	out.append("<uuid>");
+	out.append(getUuid());
+	out.append("</uuid>");
+
+	out.append("</conference>");
+	return out;
+}
+
+void Announcement::loadFromXml(const char * buff, int len) {
+    if (strlen(buff) != (size_t)len) {
+        debug("bad format xml");
+    }
+    loadFromXml(string(buff));
+}
+
+void Announcement::loadFromXml(string buff) {
+    stringstream ss;
+    ss << buff;
+    TiXmlDocument xmldoc = TiXmlDocument();
+    ss >> xmldoc;
+    TiXmlElement* root = xmldoc.FirstChildElement();    // <conference>
+    if (!root) {
+        return;
+    }
+    TiXmlNode* node = root->FirstChild();
+    TiXmlElement* elem = root->FirstChildElement();
+    while (node) {
+        string attr = node->ValueStr();
+        string value = string(elem->GetText());
+        if (attr == "audio") {
+            if (value == "true") {
+                setAudio(true);
+            } else {
+                setAudio(false);
+            }
+        }
+        else if (attr == "video") {
+            if (value == "true") {
+                setVideo(true);
+            } else {
+                setVideo(false);
+            }
+        }
+        else if (attr == "confName") {
+            setConfName(value);
+        }
+        else if (attr == "organizer") {
+            setOrganizer(value);
+        }
+        else if (attr == "email") {
+            setEmail(value);
+        }
+        else if (attr == "date") {
+            setDate(value);
+        }
+        else if (attr == "time") {
+            setTime(value);
+        }
+        else if (attr == "hours") {
+            setHours(atoi(value.c_str()));
+        }
+        else if (attr == "minutes") {
+            setMinutes(atoi(value.c_str()));
+        }
+        else if (attr == "desc") {
+            setDesc(value);
+        }
+        else if (attr == "uuid") {
+            setUuid(value);
+        }
+		else {
+			critical("Unknown xml attribute");
+		}
+        /* Go to next */
+        node = node->NextSibling();
+        elem = elem->NextSiblingElement();
+    }
 }
 
 FetchedAnnouncement::FetchedAnnouncement()
@@ -135,4 +265,5 @@ bool FetchedAnnouncement::isStaled() {
 	}
 	return false;
 }
+
 

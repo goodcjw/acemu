@@ -1,20 +1,28 @@
 CC	= g++
 LIBS	= -lccn -lssl -lcrypto
+DEFS    = -DTIXML_USE_STL -DDEBUG
 CFLAGS	= -c -Wall
 
 SOURCES	= main.cc \
+	  act.cc \
 	  sessionenum.cc \
 	  datagen.cc \
 	  announcement.cc \
-	  debugbox.cc
+	  confwizard.cc \
+	  debugbox.cc \
+	  tinyxml.cc \
+	  tinystr.cc \
+	  tinyxmlerror.cc \
+	  tinyxmlparser.cc \
+	  base64.cc
 
 OBJECTS	= $(SOURCES:.cc=.o)
 TARGET	= acemu
 
 all: $(SOURCES) $(TARGET)
 
-.cpp.o:
-	$(CC) $(CFLAGS) $< -o $@
+.cc.o:
+	$(CC) $(CFLAGS) $(DEFS) $< -o $@
 
 $(TARGET): $(OBJECTS)
 	$(CC) $(LIBS) $(OBJECTS) -o $@

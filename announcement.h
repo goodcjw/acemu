@@ -31,7 +31,7 @@ private:
     bool isPrivate;
     string desc;
     string date;
-    //string time;
+    string str_time;
     int hours;
     int minutes;
     string uuid;
@@ -44,14 +44,11 @@ public:
     unsigned char audioSessionKey[KEY_LENGTH];
     unsigned char digest[SHA_DIGEST_LENGTH];
 
-private:
-    static char * base64(const unsigned char *input, int length);
-    
 public:
     Announcement();
     void copy(Announcement *a);
 
-    string getConfName() { return confName; }
+    string& getConfName() { return confName; }
     string getOrganizer() { return organizer; }
     string getEmail() { return email; }
     string getUuid() {return uuid; }
@@ -60,16 +57,16 @@ public:
     bool getOwner() { return own; }
     string getDesc() { return desc; }
     string getDate() { return date; }
-    //string getTime() { return time; }
+    string getTime() { return str_time; }
     int getHours() { return hours; }
     int getMinutes() { return minutes; }
     bool getIsPrivate() { return isPrivate; }
     bool equalDigest(unsigned char *hash);
-    list<string> &getCerts() { return certs; }
+    list<string> getCerts() { return certs; }
     string getOpaqueName() { return opaqueName; }
     string getXmlOut() { return out; }
 
-    void setConfName(string confName) { this->confName = confName; }
+    void setConfName(string confName) { this->confName = string(confName); }
     void setOrganizer(string organizer) { this->organizer = organizer; }
     void setEmail(string email) { this->email = email; }
     void setUuid(string uuid) { this->uuid = uuid; }
@@ -78,17 +75,21 @@ public:
     void setVideo(bool video) { this->video = video; }
     void setDesc(string desc) { this->desc = desc; }
     void setDate(string date) { this->date = date; }
-    //void setTime(string time) { this->time = time; }
+    void setTime(string time) { this->str_time = time; }
     void setHours(int hours) { this->hours = hours; }
     void setMinutes(int minutes) { this->minutes = minutes; }
     void setIsPrivate(bool b) { isPrivate = b; }
-    void setCerts(list<string> &certs) { this->certs = certs; }
+    void setCerts(list<string> certs) { this->certs = certs; }
     void setOpaqueName(string opaqueName) { this->opaqueName = opaqueName; }
     void setXmlOut(string out) { this->out = out; }
 
     void setDigest(unsigned char *hash);
     void initConferenceKey();
     void initAudioSessionKey();
+
+    string toXml();
+    void loadFromXml(const char * buff, int len);
+    void loadFromXml(string buff);
 };
 
 // QDataStream &operator<<(QDataStream &out, Announcement *a);
