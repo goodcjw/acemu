@@ -1,6 +1,7 @@
 #ifndef SESSIONENUM_H
 #define SESSIONENUM_H
 
+extern "C" {
 #include <openssl/evp.h>
 #include <openssl/rand.h>
 #include <openssl/x509.h>
@@ -15,6 +16,7 @@
 #include <ccn/uri.h>
 #include <ccn/schedule.h>
 #include <errno.h>
+}
 
 #include "announcement.h"
 
