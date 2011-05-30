@@ -6,6 +6,9 @@
 #include "tinyxml.h"
 #include "confwizard.h"
 
+#include <list>
+using namespace std;
+
 class Act {
 private:
     string script_path;

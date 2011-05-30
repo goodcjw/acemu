@@ -122,27 +122,22 @@ string Announcement::toXml() {
 		out.append("false");
 	out.append("</video>");
 
-    debug("toXml 1");
 	out.append("<confName>");
 	out.append(getConfName());
 	out.append("</confName>");
 		
-    debug("toXml 2");
 	out.append("<organizer>");
 	out.append(getOrganizer());
 	out.append("</organizer>");
 
-    debug("toXml 3");
 	out.append("<email>");
 	out.append(getEmail());
 	out.append("</email>");
 
-    debug("toXml 4");
 	out.append("<desc>");
 	out.append(getDesc());
 	out.append("</desc>");
 
-    debug("toXml 5");
 	out.append("<date>");
 	out.append(getDate());
 	out.append("</date>");

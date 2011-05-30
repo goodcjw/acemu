@@ -78,9 +78,19 @@ Announcement * Act::findAnnouncementByName(string confName) {
 }
 
 void Act::joinConference(Announcement* a) {
+    list<Announcement *> lista = se->listAllPubConference();
     string confName = a->getConfName();
-    string speakName = a->getUuid();
-    debug("joinConference: " + confName);
+    string speakName;
+    if (lista.size() == 1) {
+        speakName = "1";
+    }
+    else if (lista.size() == 2) {
+        speakName = "2";
+    }
+    else {
+        debug("joinConference bug: wrong lista.size()");
+    }
+    debug("joinConference: /acemu/" + confName + "/" + speakName);
 	// should be indicated from current item in the future
 	bool audio = true;
 	bool video = false;

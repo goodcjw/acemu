@@ -11,6 +11,7 @@ extern "C" {
 
 #ifdef DEBUG
 #include <iostream>
+#include <sys/time.h>
 #endif // DEBUG
 
 using namespace std;
@@ -1205,9 +1206,24 @@ void SessionEnum::checkAlive() {
 void* SessionEnum::run(void * s) {
     SessionEnum * se = (SessionEnum *) s;
     int res = 0;
+#ifdef DEBUG
+    int cnt = 0;
+    struct timeval start, end;
+    gettimeofday(&start, NULL);
+#endif
     while (se->bRunning) {
         if (res >= 0) {
             res = ccn_run(se->ccn, 5);
+#ifdef DEBUG
+            gettimeofday(&end, NULL);  
+            int seconds  = end.tv_sec  - start.tv_sec;
+            int useconds = end.tv_usec - start.tv_usec;
+            int mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5;
+            cnt++;
+            if (cnt % 100 == 0) {
+                cout << cnt / 100 << " elapsed time: " << mtime << " milliseconds" << endl;
+            }
+#endif
         }
     }
     return NULL;
