@@ -32,9 +32,16 @@ void Act::run() {
 
 void Act::test_run() {
     se->startThread();
+    sleep(5);
     newConference();
     listPubConferences();
-    joinConference("acenum");
+    string confName = "acenum";
+    Announcement * a = findAnnouncementByName(confName);
+    if (a == NULL) {
+        debug("No conference find: " + confName);
+        return;
+    }
+    joinConference(a);
 
     /* Do something and stop tread */
     sleep(60);
@@ -56,7 +63,23 @@ void Act::newConference() {
     test_announcement(a);
 }
 
-void Act::joinConference(string confName) {
+Announcement * Act::findAnnouncementByName(string confName) {
+    list<Announcement *> listpk = se->listAllPubConference();
+    list<Announcement *>::iterator it;
+    debug("findAnnouncementByName: " + confName);
+    for (it = listpk.begin(); it != listpk.end(); it++) {
+        Announcement *a = *it;
+        if (a->getConfName() == confName) {
+            return a;
+        }
+    }
+    // TODO deal with private conferences
+    return NULL;
+}
+
+void Act::joinConference(Announcement* a) {
+    string confName = a->getConfName();
+    string speakName = a->getUuid();
     debug("joinConference: " + confName);
 	// should be indicated from current item in the future
 	bool audio = true;
@@ -70,6 +93,8 @@ void Act::joinConference(string confName) {
             delete dg;
             dg = new DataGen();
         }
+        dg->setConfName(confName);
+        dg->setSpeakName(speakName);
         dg->startThread();
     }
 }
@@ -84,6 +109,8 @@ void Act::quitConference() {
 void Act::listPubConferences() {
     list<Announcement *> lista = se->listAllPubConference();
     list<Announcement *>::iterator it;
+    debug("listPubConferences");
+    cout << lista.size() << " public conferences" << endl;
     for (it = lista.begin(); it != lista.end(); it++) {
         Announcement *a = *it;
         cout << "Conf: " << a->getConfName()

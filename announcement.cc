@@ -188,7 +188,10 @@ void Announcement::loadFromXml(string buff) {
     TiXmlElement* elem = root->FirstChildElement();
     while (node) {
         string attr = node->ValueStr();
-        string value = string(elem->GetText());
+        string value = "";
+        if (elem->GetText()) {
+            value = string(elem->GetText());
+        }
         if (attr == "audio") {
             if (value == "true") {
                 setAudio(true);
@@ -219,10 +222,18 @@ void Announcement::loadFromXml(string buff) {
             setTime(value);
         }
         else if (attr == "hours") {
-            setHours(atoi(value.c_str()));
+            if (value != "") {
+                setHours(atoi(value.c_str()));
+            } else {
+                setHours(0);
+            }
         }
         else if (attr == "minutes") {
-            setMinutes(atoi(value.c_str()));
+            if (value != "") {
+                setMinutes(atoi(value.c_str()));
+            } else {
+                setMinutes(0);
+            }
         }
         else if (attr == "desc") {
             setDesc(value);

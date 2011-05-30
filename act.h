@@ -17,7 +17,8 @@ private:
     
     void newConference();
     void dismissConference();
-    void joinConference(string confName);
+    Announcement * findAnnouncementByName(string confName);
+    void joinConference(Announcement* a);
     void quitConference();
     void listPubConferences();
     void listPriConferences();

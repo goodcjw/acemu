@@ -7,8 +7,19 @@ extern "C" {
 static pthread_mutex_t data_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 DataGen::DataGen() {
-    bitRate = 64;       // kbps
+    bitRate = 64;               // kbps
+    sampleRate = 50;            // Hz
     bRunning = false;
+    confName = "";
+    speakName = "";    
+}
+
+DataGen::DataGen(string t_confName, string t_speakName) {
+    bitRate = 64;               // kbps
+    sampleRate = 50;            // Hz
+    bRunning = false;
+    confName = t_confName;
+    speakName = t_speakName;
 }
 
 DataGen::~DataGen() {

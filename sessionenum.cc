@@ -8,11 +8,17 @@ extern "C" {
 #include <pthread.h>    
 }
 #include <sstream>
+
+#ifdef DEBUG
+#include <iostream>
+#endif // DEBUG
+
 using namespace std;
 
 #define BROADCAST_PREFIX ("/ndn/broadcast/conference")
 #define EST_USERS 20
 #define FRESHNESS 30
+#define HOSTNAME_LEN 127
 
 const unsigned char SEED[] = "1412";
 static SessionEnum *gsd = NULL;
@@ -53,9 +59,14 @@ SessionEnum::SessionEnum(string prefix) {
 	gsd = this;
     bRunning = false;
 	listPrivate = false;
-    stringstream ss;
-    ss << getuid();
-    ss >> uuid;
+
+
+    // TODO This is not really uuid
+    char tmphm[HOSTNAME_LEN];
+    memset(tmphm, 0, HOSTNAME_LEN);
+    gethostname(tmphm, HOSTNAME_LEN);
+    uuid = string(tmphm);
+
 	fetch_announce = (struct ccn_closure *) (calloc(1, sizeof(struct ccn_closure)));
 	fetch_announce->p = &incoming_content;
 	fetch_private = (struct ccn_closure *) (calloc(1, sizeof(struct ccn_closure)));
@@ -364,6 +375,7 @@ void SessionEnum::setListPrivate(bool b) {
 }
 
 void SessionEnum::handleEnumContent(struct ccn_upcall_info *info) {
+    debug("handleEnumContent");
     const unsigned char *value = NULL;
     size_t len = 0;
     int res =ccn_content_get_value(info->content_ccnb,
@@ -391,7 +403,7 @@ void SessionEnum::handleEnumContent(struct ccn_upcall_info *info) {
 
     if (a->getConfName() == "")
         critical("Fetched Conference Name is empty");
-
+    debug("call addToConferences");
     addToConferences(a, true);
 }
 
@@ -822,8 +834,10 @@ void SessionEnum::handleDismissEvent(struct ccn_upcall_info *info) {
 }
 
 void SessionEnum::addToConferences(Announcement *a, bool pub) {
-	if (a->getUuid() == uuid)
+	if (a->getUuid() == uuid) {
+        debug("addToConferences same uuid: " + uuid);
 		return;
+    }
 	FetchedAnnouncement *fa = new FetchedAnnouncement();
 	fa->copy(a);
 	if (pub) {
@@ -851,14 +865,17 @@ void SessionEnum::addToMyConferences(Announcement *a) {
 }
 
 list<Announcement *> SessionEnum::listAllPubConference() {
+    debug("listAllPubConference");
     list<Announcement *> all_pubconf;
     list<Announcement *>::iterator it;
+    cout << myConferences.size() << " myConf" << endl;
     for (it = myConferences.begin(); it != myConferences.end(); it++) {
         all_pubconf.push_back(*it);
     }
+    cout << pubConferences.size() << " PubConf" << endl;
     list<FetchedAnnouncement *>::iterator ia;
     for (ia = pubConferences.begin(); ia != pubConferences.end(); ia++) {
-        all_pubconf.push_back(*ia);
+        all_pubconf.push_back((Announcement *) *ia);
     }
     return all_pubconf;
 }

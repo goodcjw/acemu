@@ -48,7 +48,7 @@ public:
     Announcement();
     void copy(Announcement *a);
 
-    string& getConfName() { return confName; }
+    string getConfName() { return confName; }
     string getOrganizer() { return organizer; }
     string getEmail() { return email; }
     string getUuid() {return uuid; }
