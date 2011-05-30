@@ -81,10 +81,17 @@ void DataGen::ccnDisconnect() {
 
 void DataGen::generateData() {
 
+    debug("generateData");
+
     struct ccn_charbuf *temp = NULL;
-    temp = ccn_charbuf_create();
     struct ccn_charbuf *interest_nm = NULL;
+    struct ccn_charbuf *signed_info = NULL;
+    struct ccn_keystore *keystore = NULL;
+
+    temp = ccn_charbuf_create();
     interest_nm = ccn_charbuf_create();
+    signed_info = ccn_charbuf_create();
+    keystore = ccn_keystore_create();
 
     char * buf = NULL;
     int bsize, res;
@@ -102,15 +109,31 @@ void DataGen::generateData() {
     bsize = bitRate * 1024 / sampleRate / 8;
     buf = (char*) calloc(bsize, sizeof(char));
 
+    // Deal with key
+    temp->length = 0;
+    ccn_charbuf_putf(temp, "%s/.ccnx/.ccnx_keystore", getenv("HOME"));
+    res = ccn_keystore_init(keystore,
+                            ccn_charbuf_as_string(temp),
+                            (char *) "Th1s1sn0t8g00dp8ssw0rd.");
+    
+    signed_info->length = 0;
+    res = ccn_signed_info_create(signed_info,
+                                 ccn_keystore_public_key_digest(keystore),
+                                 ccn_keystore_public_key_digest_length(keystore),
+                                 NULL,
+                                 CCN_CONTENT_DATA,
+                                 -1,
+                                 NULL,
+                                 NULL);
+    
     temp->length = 0;
     res = ccn_encode_ContentObject(temp,
                                    interest_nm,
-                                   NULL,
+                                   signed_info,
                                    buf,
                                    bsize,
                                    NULL,
-                                   NULL);
-    
+                                   ccn_keystore_private_key(keystore));
     res = ccn_put(ccn, temp->buf, temp->length);
     // TODO resolve res
 
@@ -125,11 +148,16 @@ void DataGen::generateData() {
 }
 
 void DataGen::expressInterest() {
+
+    debug("expressInterest");
+
     struct ccn_charbuf *temp = NULL;
-    temp = ccn_charbuf_create();
     struct ccn_charbuf *interest_nm = NULL;
     int res;
     
+    temp = ccn_charbuf_create();
+    interest_nm = ccn_charbuf_create();
+
     // Pre-send 50 interests
     for(; outSeq < opSeq + sampleRate; outSeq++) {
         // Generate speaker's prefix
