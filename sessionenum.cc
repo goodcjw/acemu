@@ -259,14 +259,14 @@ void SessionEnum::ccnConnect() {
 
     ccn = ccn_create();
     if (ccn == NULL || ccn_connect(ccn, NULL) == -1) {
-		string qs = string("Failed to initialize ccn agent connection");
+		string qs = "Failed to initialize ccn agent connection";
 		critical(qs);
     }
 
 	// public conf
     struct ccn_charbuf *enum_interest = ccn_charbuf_create();
     if (enum_interest == NULL) {
-        string qs = string("Failed to allocate or initialize interest filter path");
+        string qs = "Failed to allocate or initialize interest filter path";
 		critical(qs);
     }
 	ccn_name_from_uri(enum_interest, (const char *) BROADCAST_PREFIX);
