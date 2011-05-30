@@ -408,6 +408,7 @@ void SessionEnum::handleEnumContent(struct ccn_upcall_info *info) {
 }
 
 void SessionEnum::handleEnumInterest(struct ccn_upcall_info *info) {
+    debug("handleEnumInterest");
 	string val = "conference-list";
 	if (ccn_name_comp_strcmp(info->interest_ccnb,
                              info->interest_comps,
@@ -419,6 +420,7 @@ void SessionEnum::handleEnumInterest(struct ccn_upcall_info *info) {
     list<Announcement *>::iterator it;
     for (it = myConferences.begin(); it != myConferences.end(); it++) {
 		Announcement *a = *it;
+        debug("handleEnumInterest: " + a->getConfName());
 		struct ccn_charbuf *name = NULL;
 		struct ccn_charbuf *content = NULL;
 
@@ -450,7 +452,7 @@ void SessionEnum::handleEnumInterest(struct ccn_upcall_info *info) {
 		ccn_put(info->h, content->buf, content->length);
 		ccn_charbuf_destroy(&name);
 		ccn_charbuf_destroy(&content);
-		if (buffer != NULL) {
+		if (buffer) {
 			free((void *)buffer);
 			buffer = NULL;
 		}
