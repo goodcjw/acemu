@@ -20,6 +20,11 @@ private:
     int bitRate;
     int sampleRate;
     bool bRunning;
+    uint32_t mySeq;     // Data we have generated
+    uint32_t rpSeq;     // Interest we have replied, no use if put
+    uint32_t opSeq;     // Content we have received
+    uint32_t outSeq;    // Interest we have expressed
+
     string confName;
     string speakName;
     string myPrefix;
@@ -43,9 +48,13 @@ public:
 
 private:
     static void* run(void * dg);
+    static void dg_timeout(int param);
 
     void ccnConnect();
     void ccnDisconnect();
+    void generateData();
+    void expressInterest();
+
     static enum ccn_upcall_res
     incoming_interest(struct ccn_closure *selfp,
                       enum ccn_upcall_kind kind,
@@ -55,7 +64,5 @@ private:
                      enum ccn_upcall_kind kind,
                      struct ccn_upcall_info *info);
 };
-
-//static void* run(void * dg);
 
 #endif // DATAGEN_H

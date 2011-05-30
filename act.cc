@@ -44,6 +44,7 @@ void Act::test_run() {
     joinConference(a);
 
     /* Do something and stop tread */
+    while(true) {}
     sleep(60);
     quitConference();
     se->stopThread();
