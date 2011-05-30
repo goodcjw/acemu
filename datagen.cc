@@ -83,8 +83,6 @@ void DataGen::ccnDisconnect() {
 
 void DataGen::generateData() {
 
-    debug("generateData");
-
     struct ccn_charbuf *temp = NULL;
     struct ccn_charbuf *interest_nm = NULL;
     struct ccn_charbuf *signed_info = NULL;
@@ -150,8 +148,6 @@ void DataGen::generateData() {
 }
 
 void DataGen::expressInterest() {
-
-    debug("expressInterest");
 
     struct ccn_charbuf *temp = NULL;
     struct ccn_charbuf *interest_nm = NULL;
