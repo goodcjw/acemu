@@ -47,6 +47,8 @@ DataGen::~DataGen() {
 }
 
 void DataGen::ccnConnect() {
+    
+    debug("ccnConnect");
     ccn = ccn_create();
 
     if (speakName == "1") {
@@ -166,6 +168,10 @@ void DataGen::expressInterest() {
         // Append sequence number
         temp->length = 0;
         ccn_charbuf_putf(temp, "%d", outSeq);
+        debug(opPrefix + "/" + string(ccn_charbuf_as_string(temp)));
+#ifdef DEBUG
+        cout << "outSeq: " << outSeq << "\topSeq: " << opSeq << endl;
+#endif
         ccn_name_append(interest_nm, temp->buf, temp->length);
         temp->length = 0;
 
@@ -221,6 +227,7 @@ enum ccn_upcall_res DataGen::incoming_interest(
         struct ccn_closure *selfp,
         enum ccn_upcall_kind kind,
         struct ccn_upcall_info *info) {
+    debug("DataGen::incoming_interest");
     return(CCN_UPCALL_RESULT_OK);    
 }
 
@@ -228,6 +235,7 @@ enum ccn_upcall_res DataGen::incoming_content(
         struct ccn_closure *selfp,
         enum ccn_upcall_kind kind,
         struct ccn_upcall_info *info) {
+    debug("DataGen::incoming_content");
     return(CCN_UPCALL_RESULT_OK);
 }
 
