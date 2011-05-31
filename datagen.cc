@@ -14,6 +14,7 @@ extern "C" {
 
 static DataGen * st_dg = NULL;
 static pthread_mutex_t data_mutex = PTHREAD_MUTEX_INITIALIZER;
+static struct timeval dg_start, dg_now;
 
 DataGen::DataGen() {
     bitRate = 64;               // kbps
@@ -150,6 +151,11 @@ void DataGen::generateData() {
 	}
 
     res = ccn_put(ccn, temp->buf, temp->length);
+#ifdef DEBUG
+    if (mySeq % 50 == 0) {
+        cout << "put content seq: " << mySeq << endl;
+    }
+#endif
     // TODO resolve res
 	if (res < 0) {
 		critical("put content failed!");
@@ -169,20 +175,19 @@ void DataGen::expressInterest() {
 
     struct ccn_charbuf *temp = NULL;
     struct ccn_charbuf *interest_nm = NULL;
-    int res;
+    int res, t_cnt;
     
     temp = ccn_charbuf_create();
     interest_nm = ccn_charbuf_create();
 
-    // Pre-send 50 interests
-    for(; outSeq < opSeq + sampleRate; outSeq++) {
+    // Pre-send interests, but no more than 10 interest in 20ms
+    for(t_cnt = 0; t_cnt++ < 10 && outSeq < opSeq + sampleRate; outSeq++) {
         // Generate speaker's prefix
         interest_nm->length = 0;
         ccn_name_from_uri(interest_nm, opPrefix.c_str());
         // Append sequence number
         temp->length = 0;
         ccn_charbuf_putf(temp, "%d", outSeq);
-        // debug(opPrefix + "/" + string(ccn_charbuf_as_string(temp)));
 #ifdef DEBUG
         cout << "Interest: outSeq: " << outSeq << "\topSeq: " << opSeq << endl;
 #endif
@@ -243,16 +248,14 @@ void* DataGen::run(void * s) {
 
     struct itimerval tout_val;
     tout_val.it_interval.tv_sec = 0;
-    tout_val.it_interval.tv_usec = 0;
+    tout_val.it_interval.tv_usec = 1000000 / dg->sampleRate;
     tout_val.it_value.tv_sec = 0;
-    tout_val.it_value.tv_usec = 1000 / dg->sampleRate;
+    tout_val.it_value.tv_usec = 1000000 / dg->sampleRate;
     setitimer(ITIMER_REAL, &tout_val, 0);
     signal(SIGALRM, dg_timeout);
 
 #ifdef DEBUG
-    int cnt = 0;
-    struct timeval start, end;
-    gettimeofday(&start, NULL);
+    gettimeofday(&dg_start, NULL);
     debug("DataGen::run");
 #endif
 
@@ -267,17 +270,6 @@ void* DataGen::run(void * s) {
             if (res < 0) {
                 cout << "ccn_run fails: erron=" << res << endl;
             }
-#ifdef DEBUG
-            gettimeofday(&end, NULL);  
-            int seconds  = end.tv_sec  - start.tv_sec;
-            int useconds = end.tv_usec - start.tv_usec;
-            int mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5;
-            cnt++;
-            if (cnt % 100 == 0) {
-                cout << "DataGen " << cnt / 100
-                     << " elapsed time: " << mtime << " milliseconds" << endl;
-            }
-#endif
         }
     }
     debug("leave DataGen::run");
@@ -315,14 +307,17 @@ void DataGen::dg_timeout(int param) {
         critical("dg_timeout: DataGen not ready");
     }
 
-    struct itimerval tout_val;
-    tout_val.it_interval.tv_sec = 0;
-    tout_val.it_interval.tv_usec = 0;
-    tout_val.it_value.tv_sec = 0;
-    tout_val.it_value.tv_usec = 1000 / st_dg->sampleRate;
+#ifdef DEBUG
+    if (st_dg->mySeq % 50 == 0) {
+        gettimeofday(&dg_now, NULL);
+        int seconds  = dg_now.tv_sec  - dg_start.tv_sec;
+        int useconds = dg_now.tv_usec - dg_start.tv_usec;
+        int mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5;
+        cout << "DataGen " << st_dg->mySeq / 100
+             << " elapsed time: " << mtime << " milliseconds" << endl;
+    }
+#endif
+    
     st_dg->generateData();
     st_dg->expressInterest();
-
-    setitimer(ITIMER_REAL, &tout_val, 0);
-    signal(SIGALRM, DataGen::dg_timeout);    
 }
