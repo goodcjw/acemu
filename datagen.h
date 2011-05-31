@@ -20,6 +20,7 @@ private:
     int bitRate;
     int sampleRate;
     bool bRunning;
+    int ttl;
     uint32_t mySeq;     // Data we have generated
     uint32_t rpSeq;     // Interest we have replied, no use if put
     uint32_t opSeq;     // Content we have received

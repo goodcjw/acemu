@@ -17,6 +17,7 @@ DataGen::DataGen() {
     bitRate = 64;               // kbps
     sampleRate = 50;            // Hz
     bRunning = false;
+    ttl = 10;                   // sec
     mySeq = 0;
     rpSeq = 0;
     opSeq = 0;
@@ -30,6 +31,7 @@ DataGen::DataGen(string t_confName, string t_speakName) {
     bitRate = 64;               // kbps
     sampleRate = 50;            // Hz
     bRunning = false;
+    ttl = 10;                   // sec
     mySeq = 0;
     rpSeq = 0;
     opSeq = 0;
@@ -56,11 +58,11 @@ void DataGen::ccnConnect() {
     }
 
     if (speakName == "1") {
-        myPrefix = "/acemu/" + confName + "/1";
-        opPrefix = "/acemu/" + confName + "/2";
+        myPrefix = "/ucla/acemu/" + confName + "/1";
+        opPrefix = "/ucla/acemu/" + confName + "/2";
     } else if (speakName == "2") {
-        myPrefix = "/acemu/" + confName + "/2";
-        opPrefix = "/acemu/" + confName + "/1";
+        myPrefix = "/ucla/acemu/" + confName + "/2";
+        opPrefix = "/ucla/acemu/" + confName + "/1";
     } else {
         critical("unknow speak");
     }
