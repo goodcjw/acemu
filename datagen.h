@@ -31,7 +31,6 @@ private:
     string opPrefix;
 
 	struct ccn *ccn;
-	struct ccn_closure dg_interest;
 	struct ccn_closure dg_content;
 
 public:
@@ -55,10 +54,6 @@ private:
     void generateData();
     void expressInterest();
 
-    static enum ccn_upcall_res
-    incoming_interest(struct ccn_closure *selfp,
-                      enum ccn_upcall_kind kind,
-                      struct ccn_upcall_info *info);
     static enum ccn_upcall_res
     incoming_content(struct ccn_closure *selfp,
                      enum ccn_upcall_kind kind,

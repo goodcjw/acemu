@@ -50,6 +50,10 @@ void DataGen::ccnConnect() {
     
     debug("ccnConnect");
     ccn = ccn_create();
+    if (ccn == NULL || ccn_connect(ccn, NULL) == -1) {
+		string qs = "Failed to initialize ccn agent connection";
+		critical(qs);
+    }
 
     if (speakName == "1") {
         myPrefix = "/acemu/" + confName + "/1";
@@ -68,8 +72,9 @@ void DataGen::ccnConnect() {
 		critical(qs);
     }
 	ccn_name_from_uri(interest_nm, myPrefix.c_str());
-    dg_interest.p = &DataGen::incoming_interest;
-    ccn_set_interest_filter(ccn, interest_nm, &dg_interest);
+#ifdef DEBUG
+    cout << "I have: " << myPrefix << endl;
+#endif
     ccn_charbuf_destroy(&interest_nm);
 
     // incoming content
@@ -77,8 +82,10 @@ void DataGen::ccnConnect() {
 }
 
 void DataGen::ccnDisconnect() {
-    ccn_destroy(&ccn);
-    ccn = NULL;
+	if (ccn != NULL) {
+		ccn_disconnect(ccn);
+		ccn_destroy(&ccn);
+	}
 }
 
 void DataGen::generateData() {
@@ -134,8 +141,15 @@ void DataGen::generateData() {
                                    bsize,
                                    NULL,
                                    ccn_keystore_private_key(keystore));
+	if (res < 0) {
+		critical("generate content failed!");
+	}
+
     res = ccn_put(ccn, temp->buf, temp->length);
     // TODO resolve res
+	if (res < 0) {
+		critical("put content failed!");
+	}
 
     ccn_charbuf_destroy(&interest_nm);
     ccn_charbuf_destroy(&temp);
@@ -172,6 +186,9 @@ void DataGen::expressInterest() {
         temp->length = 0;
 
         res = ccn_express_interest(ccn, interest_nm, &dg_content, NULL); 
+        if (res < 0) {
+            critical("express interest failed!");
+        }
     }
 }
 
@@ -210,29 +227,65 @@ void* DataGen::run(void * s) {
     setitimer(ITIMER_REAL, &tout_val, 0);
     signal(SIGALRM, dg_timeout);
 
+#ifdef DEBUG
+    int cnt = 0;
+    struct timeval start, end;
+    gettimeofday(&start, NULL);
+    debug("DataGen::run");
+#endif
+
     int res = 0;
     while (dg->bRunning) {
-        if (res >= 0) {
-            res = ccn_run(dg->ccn, 5);
+        // if (res >= 0) {
+        if (true) {
+            if (dg->ccn == NULL) {
+                critical("invalid ccnd");
+            }
+            res = ccn_run(dg->ccn, -1);
+            if (res < 0) {
+                cout << "ccn_run fails: erron=" << res << endl;
+            }
+#ifdef DEBUG
+            gettimeofday(&end, NULL);  
+            int seconds  = end.tv_sec  - start.tv_sec;
+            int useconds = end.tv_usec - start.tv_usec;
+            int mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5;
+            cnt++;
+            if (cnt % 100 == 0) {
+                cout << "DataGen " << cnt / 100
+                     << " elapsed time: " << mtime << " milliseconds" << endl;
+            }
+#endif
         }
     }
+    debug("leave DataGen::run");
     return NULL;
-}
-
-enum ccn_upcall_res DataGen::incoming_interest(
-        struct ccn_closure *selfp,
-        enum ccn_upcall_kind kind,
-        struct ccn_upcall_info *info) {
-    debug("DataGen::incoming_interest");
-    return(CCN_UPCALL_RESULT_OK);    
 }
 
 enum ccn_upcall_res DataGen::incoming_content(
         struct ccn_closure *selfp,
         enum ccn_upcall_kind kind,
         struct ccn_upcall_info *info) {
-    debug("DataGen::incoming_content");
-    return(CCN_UPCALL_RESULT_OK);
+	switch (kind) {
+	case CCN_UPCALL_FINAL:
+		return (CCN_UPCALL_RESULT_OK);
+	
+	case CCN_UPCALL_INTEREST_TIMED_OUT:
+		return (CCN_UPCALL_RESULT_OK);
+
+	case CCN_UPCALL_CONTENT: {
+		debug("incoming public content");
+		// gsd->handleEnumContent(info);
+		return (CCN_UPCALL_RESULT_OK);
+	}
+	case CCN_UPCALL_CONTENT_UNVERIFIED:
+	{
+		debug("unverified content!");
+		return (CCN_UPCALL_RESULT_OK);
+	}
+	default:
+		return (CCN_UPCALL_RESULT_OK);
+	}
 }
 
 void DataGen::dg_timeout(int param) {
