@@ -189,7 +189,7 @@ void DataGen::expressInterest() {
         temp->length = 0;
         ccn_charbuf_putf(temp, "%d", outSeq);
 #ifdef DEBUG
-        if (opSeq % 50 == 0) {
+        if (outSeq % 50 == 0) {
             cout << "Interest: outSeq: " << outSeq << "\topSeq: " << opSeq << endl;
         }
 #endif
