@@ -189,7 +189,9 @@ void DataGen::expressInterest() {
         temp->length = 0;
         ccn_charbuf_putf(temp, "%d", outSeq);
 #ifdef DEBUG
-        cout << "Interest: outSeq: " << outSeq << "\topSeq: " << opSeq << endl;
+        if (opSeq % 50 == 0) {
+            cout << "Interest: outSeq: " << outSeq << "\topSeq: " << opSeq << endl;
+        }
 #endif
         ccn_name_append(interest_nm, temp->buf, temp->length);
         temp->length = 0;
@@ -215,7 +217,11 @@ void DataGen::handleContent(struct ccn_upcall_info *info) {
     if (seq >= 0) {
         seq = (uint32_t) atoi((const char*)seqptr);
         opSeq = MAX(opSeq, seq);
-        cout << "Content: Seq: " << seq << endl;
+#ifdef DEBUG
+        if (seq % 50 == 0) {
+            cout << "Content: Seq: " << seq << endl;
+        }
+#endif
     }
 }
 
