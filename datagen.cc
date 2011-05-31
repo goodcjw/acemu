@@ -10,6 +10,8 @@ extern "C" {
 #include <iostream>
 #endif
 
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
+
 static DataGen * st_dg = NULL;
 static pthread_mutex_t data_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -131,7 +133,7 @@ void DataGen::generateData() {
                                  ccn_keystore_public_key_digest_length(keystore),
                                  NULL,
                                  CCN_CONTENT_DATA,
-                                 -1,
+                                 ttl,
                                  NULL,
                                  NULL);
     
@@ -191,6 +193,24 @@ void DataGen::expressInterest() {
         if (res < 0) {
             critical("express interest failed!");
         }
+    }
+}
+
+void DataGen::handleContent(struct ccn_upcall_info *info) {
+    // cout << string((const char*)info->interest_ccnb) << endl;
+    uint32_t seq;
+    size_t seq_size = 0;
+    struct ccn_indexbuf *comps = info->content_comps;
+    const unsigned char *ccnb = info->content_ccnb;
+    const unsigned char *seqptr = NULL;
+    int k = comps->n - 2;
+    seq = ccn_ref_tagged_BLOB(CCN_DTAG_Component, ccnb,
+                              comps->buf[k], comps->buf[k + 1],
+                              &seqptr, &seq_size);
+    if (seq >= 0) {
+        seq = (uint32_t) atoi((const char*)seqptr);
+        opSeq = MAX(opSeq, seq);
+        cout << "Seq: " << seq << endl;
     }
 }
 
@@ -282,7 +302,8 @@ enum ccn_upcall_res DataGen::incoming_content(
 	}
 	case CCN_UPCALL_CONTENT_UNVERIFIED:
 	{
-		debug("unverified content!");
+		debug("unverified content");
+        st_dg->handleContent(info);
 		return (CCN_UPCALL_RESULT_OK);
 	}
 	default:

@@ -55,6 +55,8 @@ private:
     void generateData();
     void expressInterest();
 
+    void handleContent(struct ccn_upcall_info *info);
+
     static enum ccn_upcall_res
     incoming_content(struct ccn_closure *selfp,
                      enum ccn_upcall_kind kind,
