@@ -343,5 +343,5 @@ void DataGen::dg_timeout(int param) {
 #endif
     
     st_dg->generateData();
-    st_dg->expressInterest();
+//    st_dg->expressInterest();
 }
