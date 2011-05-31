@@ -60,11 +60,11 @@ void DataGen::ccnConnect() {
     }
 
     if (speakName == "1") {
-        myPrefix = "/ndn/broadcast/acemu/" + confName + "/1";
-        opPrefix = "/ndn/broadcast/acemu/" + confName + "/2";
+        myPrefix = "/ndn/broadcast/jiwen/" + confName + "/1";
+        opPrefix = "/ndn/broadcast/jiwen/" + confName + "/2";
     } else if (speakName == "2") {
-        myPrefix = "/ndn/broadcast/acemu/" + confName + "/2";
-        opPrefix = "/ndn/broadcast/acemu/" + confName + "/1";
+        myPrefix = "/ndn/broadcast/jiwen/" + confName + "/2";
+        opPrefix = "/ndn/broadcast/jiwen/" + confName + "/1";
     } else {
         critical("unknow speak");
     }
@@ -182,9 +182,9 @@ void DataGen::expressInterest() {
         // Append sequence number
         temp->length = 0;
         ccn_charbuf_putf(temp, "%d", outSeq);
-        debug(opPrefix + "/" + string(ccn_charbuf_as_string(temp)));
+        // debug(opPrefix + "/" + string(ccn_charbuf_as_string(temp)));
 #ifdef DEBUG
-        cout << "outSeq: " << outSeq << "\topSeq: " << opSeq << endl;
+        cout << "Interest: outSeq: " << outSeq << "\topSeq: " << opSeq << endl;
 #endif
         ccn_name_append(interest_nm, temp->buf, temp->length);
         temp->length = 0;
@@ -210,7 +210,7 @@ void DataGen::handleContent(struct ccn_upcall_info *info) {
     if (seq >= 0) {
         seq = (uint32_t) atoi((const char*)seqptr);
         opSeq = MAX(opSeq, seq);
-        cout << "Seq: " << seq << endl;
+        cout << "Content: Seq: " << seq << endl;
     }
 }
 
@@ -302,7 +302,6 @@ enum ccn_upcall_res DataGen::incoming_content(
 	}
 	case CCN_UPCALL_CONTENT_UNVERIFIED:
 	{
-		debug("unverified content");
         st_dg->handleContent(info);
 		return (CCN_UPCALL_RESULT_OK);
 	}
