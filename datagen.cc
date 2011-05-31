@@ -10,6 +10,7 @@ extern "C" {
 #include <iostream>
 #endif
 
+#define CCNTIMEOUT 100
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 
 static DataGen * st_dg = NULL;
@@ -288,7 +289,8 @@ void* DataGen::run(void * s) {
             if (dg->ccn == NULL) {
                 critical("invalid ccnd");
             }
-            res = ccn_run(dg->ccn, -1);
+            dg->expressInterest();
+            res = ccn_run(dg->ccn, CCNTIMEOUT);
             if (res < 0) {
                 cout << "ccn_run fails: erron=" << res << endl;
             }
