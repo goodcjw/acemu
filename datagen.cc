@@ -58,11 +58,11 @@ void DataGen::ccnConnect() {
     }
 
     if (speakName == "1") {
-        myPrefix = "/ucla/acemu/" + confName + "/1";
-        opPrefix = "/ucla/acemu/" + confName + "/2";
+        myPrefix = "/ndn/broadcast/acemu/" + confName + "/1";
+        opPrefix = "/ndn/broadcast/acemu/" + confName + "/2";
     } else if (speakName == "2") {
-        myPrefix = "/ucla/acemu/" + confName + "/2";
-        opPrefix = "/ucla/acemu/" + confName + "/1";
+        myPrefix = "/ndn/broadcast/acemu/" + confName + "/2";
+        opPrefix = "/ndn/broadcast/acemu/" + confName + "/1";
     } else {
         critical("unknow speak");
     }
