@@ -186,6 +186,8 @@ void DataGen::generateData() {
 
 void DataGen::expressInterest() {
 
+    pthread_mutex_lock(&data_mutex);
+    
     struct ccn_charbuf *temp = NULL;
     struct ccn_charbuf *interest_nm = NULL;
     int res, t_cnt;
@@ -214,6 +216,7 @@ void DataGen::expressInterest() {
             critical("express interest failed!");
         }
     }
+    pthread_mutex_unlock(&data_mutex);    
 }
 
 void DataGen::handleContent(struct ccn_upcall_info *info) {
@@ -338,5 +341,5 @@ void DataGen::dg_timeout(int param) {
 #endif
     
     st_dg->generateData();
-    // st_dg->expressInterest();
+    st_dg->expressInterest();
 }
