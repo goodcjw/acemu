@@ -95,6 +95,9 @@ void DataGen::ccnDisconnect() {
 
 void DataGen::generateData() {
 
+    pthread_mutex_lock(&data_mutex);
+
+    //debug("generateData 1");
     struct ccn_charbuf *temp = NULL;
     struct ccn_charbuf *interest_nm = NULL;
     struct ccn_charbuf *signed_info = NULL;
@@ -108,6 +111,7 @@ void DataGen::generateData() {
     char * buf = NULL;
     int bsize, res;
 
+    //debug("generateData 2");
     // Generate speaker's prefix
     interest_nm->length = 0;
     ccn_name_from_uri(interest_nm, myPrefix.c_str());
@@ -117,6 +121,7 @@ void DataGen::generateData() {
     ccn_charbuf_putf(temp, "%d", mySeq);
     ccn_name_append(interest_nm, temp->buf, temp->length);
 
+    //debug("generateData 3");
     // Generate some minic audio data
     bsize = bitRate * 1024 / sampleRate / 8;
     buf = (char*) calloc(bsize, sizeof(char));
@@ -128,6 +133,7 @@ void DataGen::generateData() {
                             ccn_charbuf_as_string(temp),
                             (char *) "Th1s1sn0t8g00dp8ssw0rd.");
     
+    //debug("generateData 4");
     signed_info->length = 0;
     res = ccn_signed_info_create(signed_info,
                                  ccn_keystore_public_key_digest(keystore),
@@ -138,6 +144,7 @@ void DataGen::generateData() {
                                  NULL,
                                  NULL);
     
+    //debug("generateData 5");
     temp->length = 0;
     res = ccn_encode_ContentObject(temp,
                                    interest_nm,
@@ -150,6 +157,7 @@ void DataGen::generateData() {
 		critical("generate content failed!");
 	}
 
+    //debug("generateData 6");
     res = ccn_put(ccn, temp->buf, temp->length);
 #ifdef DEBUG
     if (mySeq % 50 == 0) {
@@ -163,12 +171,17 @@ void DataGen::generateData() {
 
     ccn_charbuf_destroy(&interest_nm);
     ccn_charbuf_destroy(&temp);
+    ccn_charbuf_destroy(&signed_info);
+    ccn_keystore_destroy(&keystore);
     if (buf) {
         free(buf);
     }
     // Assume that data with sequence number smaller than mySeq
     // is considered as generated
     mySeq++;
+    //debug("generateData 7");
+
+    pthread_mutex_unlock(&data_mutex);
 }
 
 void DataGen::expressInterest() {
@@ -319,11 +332,11 @@ void DataGen::dg_timeout(int param) {
         int seconds  = dg_now.tv_sec  - dg_start.tv_sec;
         int useconds = dg_now.tv_usec - dg_start.tv_usec;
         int mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5;
-        cout << "DataGen " << st_dg->mySeq / 100
+        cout << "DataGen " << st_dg->mySeq / 50
              << " elapsed time: " << mtime << " milliseconds" << endl;
     }
 #endif
     
     st_dg->generateData();
-    st_dg->expressInterest();
+    // st_dg->expressInterest();
 }
