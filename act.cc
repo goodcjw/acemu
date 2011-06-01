@@ -21,6 +21,7 @@ Act::~Act() {
     if (dg) {
         delete dg;
     }
+    debug("\nBye Bye Act\n");
 }
 
 /*

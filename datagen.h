@@ -14,6 +14,8 @@ extern "C" {
 #include <string>
 using namespace std;
 
+#include "dump.h"
+
 class DataGen {
 
 private:
@@ -33,6 +35,7 @@ private:
 
 	struct ccn *ccn;
 	struct ccn_closure dg_content;
+    Dump * m_dump;
 
 public:
     DataGen();

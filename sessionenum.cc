@@ -111,6 +111,7 @@ SessionEnum::~SessionEnum() {
 	if (actd_keystore != NULL) {
 		ccn_keystore_destroy(&actd_keystore);
 	}
+    debug("\nBye Bye SessionEnum\n");
 }
 
 void SessionEnum::startThread() {

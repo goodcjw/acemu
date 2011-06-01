@@ -37,6 +37,7 @@ DataGen::DataGen() {
     outSeq = 0;
     confName = "";
     speakName = "";
+    m_dump = new Dump();
     st_dg = this;
 }
 
@@ -51,6 +52,7 @@ DataGen::DataGen(string t_confName, string t_speakName) {
     outSeq = 0;
     confName = t_confName;
     speakName = t_speakName;
+    m_dump = new Dump();
     st_dg = this;
 }
 
@@ -59,6 +61,11 @@ DataGen::~DataGen() {
         stopThread();
     }
     st_dg = NULL;
+    if (m_dump) {
+        delete m_dump;
+        m_dump = NULL;
+    }
+    debug("\nBye Bye DataGen\n");
 }
 
 void DataGen::ccnConnect() {

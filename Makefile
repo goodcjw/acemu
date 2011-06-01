@@ -9,6 +9,7 @@ SOURCES	= main.cc \
 	  datagen.cc \
 	  announcement.cc \
 	  confwizard.cc \
+	  dump.cc \
 	  debugbox.cc \
 	  tinyxml.cc \
 	  tinystr.cc \
