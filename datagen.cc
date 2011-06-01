@@ -5,6 +5,16 @@
 #include <sys/time.h>    
 #include <signal.h>
 
+extern "C" {
+#include <ccn/ccn.h>
+#include <ccn/bloom.h>
+#include <ccn/charbuf.h>
+#include <ccn/keystore.h>
+#include <ccn/signing.h>
+#include <ccn/uri.h>
+#include <ccn/schedule.h>
+}
+
 #ifdef DEBUG
 #include <iostream>
 #endif

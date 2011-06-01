@@ -12,6 +12,16 @@
 #include <sys/time.h>
 #endif // DEBUG
 
+extern "C" {
+#include <ccn/ccn.h>
+#include <ccn/bloom.h>
+#include <ccn/charbuf.h>
+#include <ccn/keystore.h>
+#include <ccn/signing.h>
+#include <ccn/uri.h>
+#include <ccn/schedule.h>
+}
+
 using namespace std;
 
 #define BROADCAST_PREFIX ("/ndn/broadcast/conference")
