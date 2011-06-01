@@ -25,7 +25,7 @@ all: $(SOURCES) $(TARGET)
 	$(CC) $(CFLAGS) $(DEFS) $< -o $@
 
 $(TARGET): $(OBJECTS)
-	$(CC) $(LIBS) $(OBJECTS) -o $@
+	$(CC) $(OBJECTS) $(LIBS) -o $@
 
 clean:
 	rm $(OBJECTS)
