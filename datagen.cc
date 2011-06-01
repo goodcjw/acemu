@@ -4,6 +4,7 @@
 extern "C" {
 #include <pthread.h>
 #include <sys/time.h>    
+#include <signal.h>
 }
 
 #ifdef DEBUG
