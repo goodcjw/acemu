@@ -17,9 +17,11 @@ Act::Act(string sc_path) {
 Act::~Act() {
     if (se) {
         delete se;
+        se = NULL;
     }
     if (dg) {
         delete dg;
+        dg = NULL;
     }
     debug("\nBye Bye Act\n");
 }
