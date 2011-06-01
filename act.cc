@@ -152,5 +152,4 @@ static void test_announcement(Announcement * a) {
     debug(a->getDesc());
     debug(a->getDate());
     debug(a->getTime());
-    debug("leave test_announcement");
 }
