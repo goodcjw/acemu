@@ -3,10 +3,8 @@
 #include "tinyxml.h"
 #include "base64.h"
 
-extern "C" {
 #include <unistd.h>
 #include <pthread.h>    
-}
 #include <sstream>
 
 #ifdef DEBUG

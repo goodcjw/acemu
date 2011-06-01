@@ -1,3 +1,4 @@
+#include <openssl/rand.h>
 #include <iostream>
 #include <string>
 using namespace std;
@@ -7,9 +8,6 @@ using namespace std;
 #include "base64.h"
 #include "confwizard.h"
 
-extern "C" {
-#include <openssl/rand.h>
-}
 
 ConfWizard::ConfWizard(const char * const filename) {
 #ifdef DEBUG

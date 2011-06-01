@@ -1,13 +1,11 @@
 #include "base64.h"
 
 #include <string.h>
-extern "C" {
 #include <openssl/sha.h>
 #include <openssl/hmac.h>
 #include <openssl/evp.h>
 #include <openssl/bio.h>
 #include <openssl/buffer.h>
-}
 
 char *unbase64(const unsigned char *input, int length)
 {

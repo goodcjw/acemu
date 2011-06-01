@@ -1,15 +1,12 @@
 #ifndef ANNOUNCEMENT_H
 #define ANNOUNCEMENT_H
 
-extern "C" {
 #include <openssl/rand.h>
 #include <openssl/sha.h>
 #include <openssl/hmac.h>
 #include <openssl/evp.h>
 #include <openssl/bio.h>
 #include <openssl/buffer.h>
-}
-
 
 #include <ctime>
 #include <list>

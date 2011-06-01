@@ -1,11 +1,9 @@
 #include "datagen.h"
 #include "debugbox.h"
 
-extern "C" {
 #include <pthread.h>
 #include <sys/time.h>    
 #include <signal.h>
-}
 
 #ifdef DEBUG
 #include <iostream>
