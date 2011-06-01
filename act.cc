@@ -127,7 +127,11 @@ void Act::listPubConferences() {
         Announcement *a = *it;
         cout << "Conf: " << a->getConfName()
              << "\tOrg: "  << a->getOrganizer()
-             << "\temail: "<< a->getEmail() << endl;
+             << "\temail: "<< a->getEmail();
+        if (a->getOwner()) {
+            cout << "\t*";
+        }
+        cout << endl;
     }
 }
 
@@ -138,7 +142,11 @@ void Act::listPriConferences() {
         Announcement *a = *it;
         cout << "Conf: " << a->getConfName()
              << "\tOrg: "  << a->getOrganizer()
-             << "\temail: "<< a->getEmail() << endl;
+             << "\temail: "<< a->getEmail();
+        if (a->getOwner()) {
+            cout << "\t*";
+        }
+        cout << endl;
     }
 }
 
