@@ -464,14 +464,15 @@ enum ccn_upcall_res DataGen::incoming_join_interest(
 	case CCN_UPCALL_FINAL:
 	case CCN_UPCALL_INTEREST_TIMED_OUT:
 		return (CCN_UPCALL_RESULT_OK);
-	
-	case CCN_UPCALL_INTEREST: {
+	case CCN_UPCALL_INTEREST:
 		debug("incoming join interest");
 		// TODO gsd->handleEnumInterest(info);
         st_dg->handleJoinInterest(info);
 		return (CCN_UPCALL_RESULT_OK);
-	}
-	
+	case CCN_UPCALL_CONTENT_UNVERIFIED:
+		debug("incoming join interest - unverified");
+        st_dg->handleJoinInterest(info);
+		return (CCN_UPCALL_RESULT_OK);
 	default:
 		return (CCN_UPCALL_RESULT_OK);
 	}
@@ -488,15 +489,12 @@ enum ccn_upcall_res DataGen::incoming_content(
 	case CCN_UPCALL_INTEREST_TIMED_OUT:
 		return (CCN_UPCALL_RESULT_OK);
 
-	case CCN_UPCALL_CONTENT: {
+	case CCN_UPCALL_CONTENT:
 		debug("incoming public content");
 		return (CCN_UPCALL_RESULT_OK);
-	}
 	case CCN_UPCALL_CONTENT_UNVERIFIED:
-	{
         st_dg->handleContent(info);
 		return (CCN_UPCALL_RESULT_OK);
-	}
 	default:
 		return (CCN_UPCALL_RESULT_OK);
 	}
