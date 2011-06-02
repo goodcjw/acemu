@@ -13,6 +13,7 @@ extern "C" {
 
 #include <string>
 #include <list>
+#include <map>
 using namespace std;
 
 #include "dump.h"
@@ -27,14 +28,10 @@ private:
     int ttl;
     int spList_ttl;
     uint32_t mySeq;     // Data we have generated
-    uint32_t rpSeq;     // Interest we have replied, no use if put
-    uint32_t opSeq;     // Content we have received
-    uint32_t outSeq;    // Interest we have expressed
 
     string confName;
     string confPrefix;
     string speakName;   // My name
-    string myPrefix;
     string opPrefix;
 
 	struct ccn *ccn;
@@ -46,6 +43,8 @@ private:
     Dump * m_dump;
 
     list<string> speakList;
+    map<string, uint32_t> opSeqs;   // Content we have received
+    map<string, uint32_t> outSeqs;  // Interest we have expressed
 
 public:
     DataGen();
@@ -76,6 +75,7 @@ private:
     
     string speakListToXml();
     void loadSpeakList(string t_xml);
+    void updateSeqs();
 
     void handleContent(struct ccn_upcall_info *info);
     void handleJoinInterest(struct ccn_upcall_info *info);

@@ -41,9 +41,6 @@ DataGen::DataGen() {
     ttl = 10;                   // sec
     spList_ttl = 100;           // times that run() is called
     mySeq = 0;
-    rpSeq = 0;
-    opSeq = 0;
-    outSeq = 0;
     confName = "";
     confPrefix = "";
     speakName = "";
@@ -59,9 +56,6 @@ DataGen::DataGen(string t_confName, string t_speakName) {
     ttl = 10;                   // sec
     spList_ttl = 100;           // times that run() is called
     mySeq = 0;
-    rpSeq = 0;
-    opSeq = 0;
-    outSeq = 0;
     confName = t_confName;
     confPrefix = "/ndn/broadcast/jiwen/" + confName;
     speakName = t_speakName;
@@ -97,16 +91,6 @@ void DataGen::ccnConnect() {
 		critical(qs);
     }
 
-    if (speakName == "1") {
-        myPrefix = confPrefix + "/1";
-        opPrefix = confPrefix + "/2";
-    } else if (speakName == "2") {
-        myPrefix = confPrefix + "/2";
-        opPrefix = confPrefix + "/1";
-    } else {
-        critical("unknow speak" + speakName);
-    }
-    
     initKeystoreAndSignedInfo();
 
     // incoming content
@@ -199,7 +183,7 @@ void DataGen::generateData() {
 
     // Generate speaker's prefix
     interest_nm->length = 0;
-    ccn_name_from_uri(interest_nm, myPrefix.c_str());
+    ccn_name_from_uri(interest_nm, (confPrefix + "/" + speakName).c_str());
 
     // Append sequence number
     temp->length = 0;
@@ -257,27 +241,47 @@ void DataGen::expressInterest() {
     temp = ccn_charbuf_create();
     interest_nm = ccn_charbuf_create();
 
-    // Pre-send interests, but no more than 10 interest in 20ms
-    for(t_cnt = 0; t_cnt++ < 10 && outSeq < opSeq + sampleRate; outSeq++) {
-        // Generate speaker's prefix
-        interest_nm->length = 0;
-        ccn_name_from_uri(interest_nm, opPrefix.c_str());
-        // Append sequence number
-        temp->length = 0;
-        ccn_charbuf_putf(temp, "%d", outSeq);
-#ifdef DEBUG
-        if (outSeq % 50 == 0) {
-            cout << "Interest: outSeq: " << outSeq << "\topSeq: " << opSeq << endl;
+    pthread_mutex_lock(&splist_mutex);
+    list<string>::iterator its;
+    map<string, uint32_t>::iterator itm;
+    for(its = speakList.begin(); its != speakList.end(); its++) {
+        if (*its == speakName) {
+            // do not send interest to myself
+            continue;
         }
+        if (opSeqs.find(*its) == opSeqs.end()) {
+            debug(*its + " is in speakList but not in opSeqs");
+            continue;
+        }
+        if (outSeqs.find(*its) == outSeqs.end()) {
+            debug(*its + " is in speakList but not in outSeqs");
+            continue;
+        }
+        string opPrefix = confPrefix + "/" + *its;
+        // Pre-send interests, but no more than 10 interest in 20ms
+        for(t_cnt = 0; t_cnt++ < 10 && outSeqs[*its] < opSeqs[*its] + sampleRate; outSeqs[*its]++) {
+            // Generate speaker's prefix
+            interest_nm->length = 0;
+            ccn_name_from_uri(interest_nm, opPrefix.c_str());
+            // Append sequence number
+            temp->length = 0;
+            ccn_charbuf_putf(temp, "%d", outSeqs[*its]);
+#ifdef DEBUG
+            if (outSeqs[*its] % 50 == 0) {
+                cout << "Interest: outSeq: " << outSeqs[*its]
+                     << "\topSeq: " << opSeqs[*its] << endl;
+            }
 #endif
-        ccn_name_append(interest_nm, temp->buf, temp->length);
-        temp->length = 0;
+            ccn_name_append(interest_nm, temp->buf, temp->length);
+            temp->length = 0;
 
-        res = ccn_express_interest(ccn, interest_nm, &dg_content, NULL); 
-        if (res < 0) {
-            critical("express interest failed!");
+            res = ccn_express_interest(ccn, interest_nm, &dg_content, NULL); 
+            if (res < 0) {
+                critical("express interest failed!");
+            }
         }
     }
+    pthread_mutex_unlock(&splist_mutex);
 
     ccn_charbuf_destroy(&temp);
     ccn_charbuf_destroy(&interest_nm);
@@ -294,9 +298,6 @@ void DataGen::refreshSpList() {
     // Generate speaker's prefix
     interest_nm->length = 0;
     ccn_name_from_uri(interest_nm, (confPrefix + "/join/" + speakName).c_str());
-#ifdef DEBUG
-    debug(confPrefix + "/join/" + speakName);
-#endif
     int res = ccn_express_interest(ccn, interest_nm, &dg_join_con, NULL); 
     if (res < 0) {
         critical("express interest failed!");
@@ -324,6 +325,10 @@ string DataGen::speakListToXml() {
 }
 
 void DataGen::loadSpeakList(string t_xml) {
+    if (owner) {
+        debug("owner should not load speak list from network!!!");
+        return;
+    }
     stringstream ss;
     ss << t_xml;
     TiXmlDocument xmldoc = TiXmlDocument();
@@ -358,23 +363,74 @@ void DataGen::loadSpeakList(string t_xml) {
         elem = elem->NextSiblingElement();        
     }
     speakList.unique();
+    updateSeqs();
+
     pthread_mutex_unlock(&splist_mutex);
 }
 
+void DataGen::updateSeqs() {
+    map<string, uint32_t> t_opSeqs;
+    map<string, uint32_t> t_outSeqs;
+    list<string>::iterator its;
+    map<string, uint32_t>::iterator itm;
+    for (its = speakList.begin(); its != speakList.end(); its++) {
+        if (*its == speakName) {
+            continue;
+        }
+        itm = opSeqs.find(*its);
+        if (itm == opSeqs.end()) {
+            // not find
+            t_opSeqs[*its] = 0;
+        } else {
+            t_opSeqs[*its] = opSeqs[*its];
+        }
+        itm = outSeqs.find(*its);
+        if (itm == outSeqs.end()) {
+            // not find
+            t_outSeqs[*its] = 0;
+        } else {
+            t_outSeqs[*its] = outSeqs[*its];
+        }
+        // Replace with new map
+        opSeqs = t_opSeqs;
+        outSeqs = t_outSeqs;
+    }
+}
+
 void DataGen::handleContent(struct ccn_upcall_info *info) {
-    // cout << string((const char*)info->interest_ccnb) << endl;
     uint32_t seq;
-    size_t seq_size = 0;
+    int k;
     struct ccn_indexbuf *comps = info->content_comps;
     const unsigned char *ccnb = info->content_ccnb;
+    const unsigned char *srcName = NULL;
     const unsigned char *seqptr = NULL;
-    int k = comps->n - 2;
+    size_t src_size = 0;
+    size_t seq_size = 0;
+    string str_srcName = "";
+    map<string, uint32_t>::iterator itm;
+
+    k = comps->n - 3;
+    seq = ccn_ref_tagged_BLOB(CCN_DTAG_Component, ccnb,
+                              comps->buf[k], comps->buf[k + 1],
+                              &srcName, &src_size);
+    if (seq >= 0) {
+        str_srcName = string((const char*)srcName);
+    } else {
+        return;
+    }
+
+    if (opSeqs.find(str_srcName) == opSeqs.end()) {
+        debug("Unexpected content: " + str_srcName);
+        return;
+    }
+
+    k = comps->n - 2;
     seq = ccn_ref_tagged_BLOB(CCN_DTAG_Component, ccnb,
                               comps->buf[k], comps->buf[k + 1],
                               &seqptr, &seq_size);
     if (seq >= 0) {
         seq = (uint32_t) atoi((const char*)seqptr);
-        opSeq = MAX(opSeq, seq);
+        opSeqs[str_srcName] = MAX(seq, opSeqs[str_srcName]);
 #ifdef DEBUG
         if (seq % 50 == 0) {
             cout << "Content: Seq: " << seq << endl;
@@ -401,6 +457,7 @@ void DataGen::handleJoinInterest(struct ccn_upcall_info *info) {
         pthread_mutex_lock(&splist_mutex);
         speakList.push_back(t_spName);
         speakList.unique();
+        updateSeqs();
         pthread_mutex_unlock(&splist_mutex);
 
         string t_spListXml = speakListToXml();
