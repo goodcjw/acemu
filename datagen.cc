@@ -429,7 +429,6 @@ void DataGen::handleJoinInterest(struct ccn_upcall_info *info) {
 }
 
 void DataGen::handleSpList(struct ccn_upcall_info *info) {
-    debug("handleSpList");
     const unsigned char *value = NULL;
     size_t len = 0;
     int res =ccn_content_get_value(info->content_ccnb,
