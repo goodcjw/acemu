@@ -38,7 +38,7 @@ DataGen::DataGen() {
     sampleRate = 50;            // Hz
     bRunning = false;
     owner = false;
-    ttl = 1;                    // sec
+    ttl = 10;                   // sec
     spList_ttl = 100;           // times that run() is called
     mySeq = 0;
     rpSeq = 0;
@@ -56,7 +56,7 @@ DataGen::DataGen(string t_confName, string t_speakName) {
     sampleRate = 50;            // Hz
     bRunning = false;
     owner = false;
-    ttl = 1;                    // sec
+    ttl = 10;                   // sec
     spList_ttl = 100;           // times that run() is called
     mySeq = 0;
     rpSeq = 0;
