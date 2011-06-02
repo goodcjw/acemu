@@ -1,10 +1,11 @@
+#include <unistd.h>
+#include <iostream>
 #include "act.h"
 #include "debugbox.h"
-
-#include <iostream>
 using namespace std;
 
 #define DEFAULT_PREFIX ("/ndn/broadcast/conference")
+#define SPNAME_LEN 128
 
 static void test_announcement(Announcement * a);
 
@@ -86,16 +87,11 @@ Announcement * Act::findAnnouncementByName(string confName) {
 void Act::joinConference(Announcement* a) {
     list<Announcement *> lista = se->listAllPubConference();
     string confName = a->getConfName();
-    string speakName;
-    if (lista.size() == 1) {
-        speakName = "1";
-    }
-    else if (lista.size() == 2) {
-        speakName = "2";
-    }
-    else {
-        debug("joinConference bug: wrong lista.size()");
-    }
+
+    char buffer[SPNAME_LEN];
+    gethostname(buffer, SPNAME_LEN);
+    string speakName = string(buffer);
+    
     debug("joinConference: /acemu/" + confName + "/" + speakName);
 	// should be indicated from current item in the future
 	bool audio = true;
