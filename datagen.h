@@ -35,6 +35,7 @@ private:
     string opPrefix;
 
 	struct ccn *ccn;
+    struct ccn_closure dg_interest;
 	struct ccn_closure dg_content;
     struct ccn_closure dg_join_int;
     struct ccn_closure dg_join_con;
@@ -77,10 +78,15 @@ private:
     void loadSpeakList(string t_xml);
     void updateSeqs();
 
+    void handleInterest(struct ccn_upcall_info *info);
     void handleContent(struct ccn_upcall_info *info);
     void handleJoinInterest(struct ccn_upcall_info *info);
     void handleSpList(struct ccn_upcall_info *info);
 
+    static enum ccn_upcall_res
+    incoming_interest(struct ccn_closure *selfp,
+                      enum ccn_upcall_kind kind,
+                      struct ccn_upcall_info *info);
     static enum ccn_upcall_res
     incoming_content(struct ccn_closure *selfp,
                      enum ccn_upcall_kind kind,

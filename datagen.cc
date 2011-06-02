@@ -83,7 +83,14 @@ DataGen::~DataGen() {
 }
 
 void DataGen::ccnConnect() {
-    
+
+    struct ccn_charbuf *interest_nm = NULL;
+    interest_nm = ccn_charbuf_create();
+    if (interest_nm == NULL) {
+        string qs = "Failed to allocate or initialize interest filter path";
+        critical(qs);
+    }
+
     debug("ccnConnect");
     ccn = ccn_create();
     if (ccn == NULL || ccn_connect(ccn, NULL) == -1) {
@@ -98,24 +105,26 @@ void DataGen::ccnConnect() {
     // incoming speak list
     dg_join_con.p = &DataGen::incoming_spList;
 
+    interest_nm->length = 0;
+    ccn_name_from_uri(interest_nm, (confPrefix + "/" + speakName).c_str());
+    dg_interest.p = &DataGen::incoming_interest;
+    ccn_set_interest_filter(ccn, interest_nm, &dg_interest);
+
     if (owner) {
         // Add my name into speak list
         speakList.push_back(speakName);
 
         // incoming join interest
-        struct ccn_charbuf *interest_nm = ccn_charbuf_create();
-        if (interest_nm == NULL) {
-            string qs = "Failed to allocate or initialize interest filter path";
-            critical(qs);
-        }
+        interest_nm->length = 0;
         ccn_name_from_uri(interest_nm, (confPrefix + "/join").c_str());
 #ifdef DEBUG
         cout << "I am onwer: " << confPrefix << endl;
 #endif
         dg_join_int.p = &DataGen::incoming_join_interest;
         ccn_set_interest_filter(ccn, interest_nm, &dg_join_int);
-        ccn_charbuf_destroy(&interest_nm);
     }
+
+    ccn_charbuf_destroy(&interest_nm);
 }
 
 void DataGen::ccnDisconnect() {
@@ -206,7 +215,6 @@ void DataGen::generateData() {
 		critical("generate content failed!");
 	}
 
-    //debug("generateData 6");
     res = ccn_put(ccn, temp->buf, temp->length);
 #ifdef DEBUG
     if (mySeq % 50 == 0) {
@@ -280,7 +288,7 @@ void DataGen::expressInterest() {
             ss << "ccnx:" << opPrefix << "/" << outSeqs[*its];
             string ccn_name;
             ss >> ccn_name;
-            m_dump->putline("I, " + ccn_name);
+            m_dump->putline("O, I, " + ccn_name);
             if (res < 0) {
                 critical("express interest failed!");
             }
@@ -402,6 +410,56 @@ void DataGen::updateSeqs() {
     }
 }
 
+void DataGen::handleInterest(struct ccn_upcall_info *info) {
+    debug("handleInterest");
+    uint32_t seq;
+    int k;
+    struct ccn_indexbuf *comps = info->interest_comps;
+    const unsigned char *ccnb = info->interest_ccnb;
+    const unsigned char *seqptr = NULL;
+    size_t seq_size = 0;
+
+    k = comps->n - 2;
+    seq = ccn_ref_tagged_BLOB(CCN_DTAG_Component, ccnb,
+                              comps->buf[k], comps->buf[k + 1],
+                              &seqptr, &seq_size);
+    if (seq >= 0) {
+        seq = (uint32_t) atoi((const char*)seqptr);
+#ifdef DEBUG
+        if (seq % 50 == 0) {
+            cout << "Interest: Seq: " << seq << endl;
+        }
+#endif
+    }
+
+    string reply_name = confPrefix + "/" 
+                      + speakName + "/" + string((const char*)seqptr);
+    
+    /*
+    struct ccn_charbuf *temp = NULL;
+    struct ccn_charbuf *interest_nm = NULL;
+    char * buf = NULL;
+    
+    temp = ccn_charbuf_create();    
+    interest_nm = ccn_charbuf_create();
+    // Generate replied content name
+    interest_nm->length = 0;
+    ccn_name_from_uri(interest_nm, reply_name.c_str());
+    // Generate some minic audio data
+    bsize = bitRate * 1024 / sampleRate / 8;
+    buf = (char*) calloc(bsize, sizeof(char));
+    
+    ccn_charbuf_destroy(&interest_nm);
+    ccn_charbuf_destroy(&temp);
+    if (buf) {
+        free(buf);
+    }
+    */
+
+    string ccn_name = "ccnx:" + reply_name;
+    m_dump->putline("I, I, " + ccn_name);
+}
+
 void DataGen::handleContent(struct ccn_upcall_info *info) {
     uint32_t seq;
     int k;
@@ -414,8 +472,6 @@ void DataGen::handleContent(struct ccn_upcall_info *info) {
     string str_srcName = "";
     map<string, uint32_t>::iterator itm;
 
-
-    
     k = comps->n - 3;
     seq = ccn_ref_tagged_BLOB(CCN_DTAG_Component, ccnb,
                               comps->buf[k], comps->buf[k + 1],
@@ -446,7 +502,7 @@ void DataGen::handleContent(struct ccn_upcall_info *info) {
     }
     string ccn_name = "ccnx:" + confPrefix + 
                       "/" + str_srcName + "/" + string((const char*)seqptr);
-    m_dump->putline("C, " + ccn_name);
+    m_dump->putline("I, C, " + ccn_name);
 }
 
 void DataGen::handleJoinInterest(struct ccn_upcall_info *info) {
@@ -567,6 +623,22 @@ void* DataGen::run(void * s) {
     }
     debug("leave DataGen::run");
     return NULL;
+}
+
+enum ccn_upcall_res DataGen::incoming_interest(
+        struct ccn_closure *selfp,
+        enum ccn_upcall_kind kind,
+        struct ccn_upcall_info *info) {
+	switch (kind) {
+	case CCN_UPCALL_FINAL:
+	case CCN_UPCALL_INTEREST_TIMED_OUT:
+		return (CCN_UPCALL_RESULT_OK);
+	case CCN_UPCALL_INTEREST:
+        st_dg->handleInterest(info);
+		return (CCN_UPCALL_RESULT_OK);
+	default:
+		return (CCN_UPCALL_RESULT_OK);
+	}
 }
 
 enum ccn_upcall_res DataGen::incoming_join_interest(
