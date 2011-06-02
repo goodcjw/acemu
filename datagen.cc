@@ -193,6 +193,11 @@ void DataGen::generateData() {
     // Generate speaker's prefix
     interest_nm->length = 0;
     ccn_name_from_uri(interest_nm, (confPrefix + "/" + speakName).c_str());
+    stringstream ss;
+    ss << "ccnx:" << confPrefix << "/" << speakName << "/" << mySeq;
+    string ccn_name;
+    ss >> ccn_name;
+    m_dump->putline("O, C, " + ccn_name);
 
     // Append sequence number
     temp->length = 0;
