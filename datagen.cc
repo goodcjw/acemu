@@ -466,11 +466,6 @@ enum ccn_upcall_res DataGen::incoming_join_interest(
 		return (CCN_UPCALL_RESULT_OK);
 	case CCN_UPCALL_INTEREST:
 		debug("incoming join interest");
-		// TODO gsd->handleEnumInterest(info);
-        st_dg->handleJoinInterest(info);
-		return (CCN_UPCALL_RESULT_OK);
-	case CCN_UPCALL_CONTENT_UNVERIFIED:
-		debug("incoming join interest - unverified");
         st_dg->handleJoinInterest(info);
 		return (CCN_UPCALL_RESULT_OK);
 	default:
@@ -511,16 +506,14 @@ enum ccn_upcall_res DataGen::incoming_spList(
 	case CCN_UPCALL_INTEREST_TIMED_OUT:
 		return (CCN_UPCALL_RESULT_OK);
 
-	case CCN_UPCALL_CONTENT: {
-		debug("incoming join content");
-		return (CCN_UPCALL_RESULT_OK);
-	}
-	case CCN_UPCALL_CONTENT_UNVERIFIED:
-	{
+	case CCN_UPCALL_CONTENT:
 		debug("incoming join content");
         st_dg->handleSpList(info);
 		return (CCN_UPCALL_RESULT_OK);
-	}
+	case CCN_UPCALL_CONTENT_UNVERIFIED:
+		debug("incoming join content - unverified");
+        st_dg->handleSpList(info);
+		return (CCN_UPCALL_RESULT_OK);
 	default:
 		return (CCN_UPCALL_RESULT_OK);
 	}
