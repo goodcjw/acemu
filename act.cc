@@ -19,10 +19,12 @@ Act::~Act() {
         delete se;
         se = NULL;
     }
+    debug("SessionEmu released\n");
     if (dg) {
         delete dg;
         dg = NULL;
     }
+    debug("DataGen released\n");
     debug("\nBye Bye Act\n");
 }
 
@@ -109,6 +111,9 @@ void Act::joinConference(Announcement* a) {
         }
         dg->setConfName(confName);
         dg->setSpeakName(speakName);
+        if (a->getOwner()) {
+            dg->setOwner(true);
+        }
         dg->startThread();
     }
 }

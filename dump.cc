@@ -5,6 +5,7 @@
 using namespace std;
 
 #include "dump.h"
+#include "debugbox.h"
 
 #define BUFFER_LEN 128
 
@@ -27,6 +28,7 @@ Dump::Dump() {
 }
 
 Dump::~Dump() {
+    debug("~Dump");
     f.close();
 }
 
