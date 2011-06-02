@@ -249,7 +249,7 @@ void DataGen::expressInterest() {
     
     struct ccn_charbuf *temp = NULL;
     struct ccn_charbuf *interest_nm = NULL;
-    int res;
+    int res, t_cnt;
     
     temp = ccn_charbuf_create();
     interest_nm = ccn_charbuf_create();
@@ -272,7 +272,7 @@ void DataGen::expressInterest() {
         }
         string opPrefix = confPrefix + "/" + *its;
         // Pre-send interests, but no more than 10 interest in 20ms
-        for(; outSeqs[*its] < opSeqs[*its] + sampleRate; outSeqs[*its]++) {
+        for(t_cnt = 0; t_cnt++ != 10 && outSeqs[*its] < opSeqs[*its] + sampleRate; outSeqs[*its]++) {
             // Generate speaker's prefix
             interest_nm->length = 0;
             ccn_name_from_uri(interest_nm, opPrefix.c_str());
