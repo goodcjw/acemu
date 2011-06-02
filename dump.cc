@@ -11,8 +11,6 @@ using namespace std;
 
 #define BUFFER_LEN 128
 
-static pthread_mutex_t buf_mutex = PTHREAD_MUTEX_INITIALIZER;
-
 Dump::Dump() {
     time_t rawtime;
     struct tm * timeinfo;
@@ -43,10 +41,7 @@ void Dump::putline(string line) {
     gettimeofday(&t_now, NULL);
     sprintf(str_now, "%d.%d, ", (int)t_now.tv_sec, (int)t_now.tv_usec);
 
-    pthread_mutex_lock(&buf_mutex);
     f << string(str_now) << line << endl;
-    f.flush();
-    pthread_mutex_lock(&buf_mutex);
 }
 
 void Dump::putline(const char * line) {
