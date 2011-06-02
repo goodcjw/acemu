@@ -42,6 +42,7 @@ void Dump::putline(string line) {
     sprintf(str_now, "%d.%d, ", (int)t_now.tv_sec, (int)t_now.tv_usec);
 
     f << string(str_now) << line << endl;
+    f.flush();
 }
 
 void Dump::putline(const char * line) {
