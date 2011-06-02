@@ -520,7 +520,7 @@ enum ccn_upcall_res DataGen::incoming_spList(
 	case CCN_UPCALL_CONTENT_UNVERIFIED:
 	{
 		debug("incoming join content");
-        st_dg->handleContent(info);
+        st_dg->handleSpList(info);
 		return (CCN_UPCALL_RESULT_OK);
 	}
 	default:
