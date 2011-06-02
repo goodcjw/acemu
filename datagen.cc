@@ -497,7 +497,10 @@ void DataGen::handleContent(struct ccn_upcall_info *info) {
                               &seqptr, &seq_size);
     if (seq >= 0) {
         seq = (uint32_t) atoi((const char*)seqptr);
+        pthread_mutex_lock(&splist_mutex);    
         opSeqs[str_srcName] = MAX(seq, opSeqs[str_srcName]);
+        pthread_mutex_unlock(&splist_mutex);
+        
 #ifdef DEBUG
         if (seq % 50 == 0) {
             cout << "Content: Seq: " << seq << endl;
