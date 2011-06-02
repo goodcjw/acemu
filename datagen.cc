@@ -411,7 +411,6 @@ void DataGen::updateSeqs() {
 }
 
 void DataGen::handleInterest(struct ccn_upcall_info *info) {
-    debug("handleInterest");
     uint32_t seq;
     int k;
     struct ccn_indexbuf *comps = info->interest_comps;
