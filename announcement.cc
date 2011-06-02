@@ -11,8 +11,7 @@ using namespace std;
 #define REFRESH_INTERVAL 30 
 #define REMOVE_INTERVAL (2 * REFRESH_INTERVAL + 5) 
 
-Announcement::Announcement()
-{
+Announcement::Announcement() {
 	confName = string("");
 	organizer = string("");
 	email = string("");

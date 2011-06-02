@@ -1,6 +1,3 @@
-#include "datagen.h"
-#include "debugbox.h"
-
 #include <pthread.h>
 #include <sys/time.h>    
 #include <signal.h>
@@ -14,6 +11,13 @@ extern "C" {
 #include <ccn/uri.h>
 #include <ccn/schedule.h>
 }
+
+#include <sstream>
+using namespace std;
+
+#include "datagen.h"
+#include "debugbox.h"
+#include "tinyxml.h"
 
 #ifdef DEBUG
 #include <iostream>
@@ -306,16 +310,59 @@ string DataGen::speakListToXml() {
     string temp = "";
     temp += "<speakList>";
     list<string>::iterator its;
+
+    pthread_mutex_lock(&splist_mutex);
     for (its = speakList.begin(); its != speakList.end(); its++) {
         temp += "<speak>";
         temp += *its;
         temp += "</speak>";
     }
+    pthread_mutex_unlock(&splist_mutex);
+
     temp += "</speakList>";
     return temp;
 }
 
 void DataGen::loadSpeakList(string t_xml) {
+    stringstream ss;
+    ss << t_xml;
+    TiXmlDocument xmldoc = TiXmlDocument();
+    ss >> xmldoc;
+    TiXmlElement* root = xmldoc.FirstChildElement();    // <speakList>
+    
+    if (!root) {
+        return;
+    }
+
+    pthread_mutex_lock(&splist_mutex);
+
+    speakList.clear();
+    TiXmlNode* node = root->FirstChild();
+    TiXmlElement* elem = root->FirstChildElement();
+    while (node) {
+        string attr = node->ValueStr();
+        string value = "";
+        if (elem->GetText()) {
+            value = string(elem->GetText());
+        } else {
+            /* Go to next */
+            node = node->NextSibling();
+            elem = elem->NextSiblingElement();
+            continue;
+        }
+        if (attr == "speak") {
+            speakList.push_back(value);
+        }
+        /* Go to next */
+        node = node->NextSibling();
+        elem = elem->NextSiblingElement();        
+    }
+    speakList.unique();
+    pthread_mutex_unlock(&splist_mutex);
+#ifdef DEBUG
+    string st_debug = speakListToXml();
+    cout << st_debug << endl;
+#endif
 }
 
 void DataGen::handleContent(struct ccn_upcall_info *info) {
@@ -354,8 +401,12 @@ void DataGen::handleJoinInterest(struct ccn_upcall_info *info) {
                                 &speakName, &sn_size);
     if (r >= 0) {
         string t_spName = string((const char*)speakName);
+        
+        pthread_mutex_lock(&splist_mutex);
         speakList.push_back(t_spName);
         speakList.unique();
+        pthread_mutex_unlock(&splist_mutex);
+
         string t_spListXml = speakListToXml();
 #ifdef DEBUG
         debug("new speaker: " + t_spName);
@@ -392,6 +443,7 @@ void DataGen::handleSpList(struct ccn_upcall_info *info) {
         critical("failed to parse content object");
 
     string str_xml = string((const char*)value);
+    loadSpeakList(str_xml);
     debug(str_xml);
 }
 
