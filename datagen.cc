@@ -276,6 +276,11 @@ void DataGen::expressInterest() {
             temp->length = 0;
 
             res = ccn_express_interest(ccn, interest_nm, &dg_content, NULL); 
+            stringstream ss;
+            ss << "ccnx:" << opPrefix << "/" << outSeqs[*its];
+            string ccn_name;
+            ss >> ccn_name;
+            m_dump->putline("I, " + ccn_name);
             if (res < 0) {
                 critical("express interest failed!");
             }
@@ -409,6 +414,8 @@ void DataGen::handleContent(struct ccn_upcall_info *info) {
     string str_srcName = "";
     map<string, uint32_t>::iterator itm;
 
+
+    
     k = comps->n - 3;
     seq = ccn_ref_tagged_BLOB(CCN_DTAG_Component, ccnb,
                               comps->buf[k], comps->buf[k + 1],
@@ -437,6 +444,9 @@ void DataGen::handleContent(struct ccn_upcall_info *info) {
         }
 #endif
     }
+    string ccn_name = "ccnx:" + confPrefix + 
+                      "/" + str_srcName + "/" + string((const char*)seqptr);
+    m_dump->putline("C, " + ccn_name);
 }
 
 void DataGen::handleJoinInterest(struct ccn_upcall_info *info) {

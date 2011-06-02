@@ -1,5 +1,6 @@
 #include <time.h>
 #include <unistd.h>
+#include <sys/time.h>
 
 #include <iostream>
 using namespace std;
@@ -33,7 +34,13 @@ Dump::~Dump() {
 }
 
 void Dump::putline(string line) {
-    f << line << endl;
+    struct timeval t_now;
+    char str_now[BUFFER_LEN];
+
+    gettimeofday(&t_now, NULL);
+    sprintf(str_now, "%d.%d, ", (int)t_now.tv_sec, (int)t_now.tv_usec);
+
+    f << string(str_now) << line << endl;
     f.flush();
 }
 
