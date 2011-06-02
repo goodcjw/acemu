@@ -10,6 +10,7 @@ using namespace std;
 #include "debugbox.h"
 
 #define BUFFER_LEN 128
+static pthread_mutex_t dump_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 Dump::Dump() {
     time_t rawtime;
@@ -41,7 +42,9 @@ void Dump::putline(string line) {
     gettimeofday(&t_now, NULL);
     sprintf(str_now, "%d.%d, ", (int)t_now.tv_sec, (int)t_now.tv_usec);
 
+    pthread_mutex_lock(&dump_mutex);
     f << string(str_now) << line << endl;
+    pthread_mutex_unlock(&dump_mutex);    
     f.flush();
 }
 

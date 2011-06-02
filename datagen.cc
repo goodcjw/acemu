@@ -179,7 +179,6 @@ void DataGen::initKeystoreAndSignedInfo() {
 
 void DataGen::generateData() {
 
-    pthread_mutex_lock(&data_mutex);
 
     struct ccn_charbuf *temp = NULL;
     struct ccn_charbuf *interest_nm = NULL;
@@ -199,6 +198,7 @@ void DataGen::generateData() {
     ss >> ccn_name;
     m_dump->putline("O, C, " + ccn_name);
 
+    pthread_mutex_lock(&data_mutex);
     // Append sequence number
     temp->length = 0;
     ccn_charbuf_putf(temp, "%d", mySeq);
@@ -245,8 +245,6 @@ void DataGen::generateData() {
 
 void DataGen::expressInterest() {
 
-    pthread_mutex_lock(&data_mutex);
-    
     struct ccn_charbuf *temp = NULL;
     struct ccn_charbuf *interest_nm = NULL;
     int res, t_cnt;
@@ -303,7 +301,6 @@ void DataGen::expressInterest() {
 
     ccn_charbuf_destroy(&temp);
     ccn_charbuf_destroy(&interest_nm);
-    pthread_mutex_unlock(&data_mutex);    
 }
 
 void DataGen::refreshSpList() {
