@@ -197,7 +197,7 @@ void DataGen::generateData() {
     ss << "ccnx:" << confPrefix << "/" << speakName << "/" << mySeq;
     string ccn_name;
     ss >> ccn_name;
-    //m_dump->putline("O, C, " + ccn_name);
+    m_dump->putline("O, C, " + ccn_name);
 
     // Append sequence number
     temp->length = 0;
