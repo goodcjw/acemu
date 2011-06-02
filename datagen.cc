@@ -359,10 +359,6 @@ void DataGen::loadSpeakList(string t_xml) {
     }
     speakList.unique();
     pthread_mutex_unlock(&splist_mutex);
-#ifdef DEBUG
-    string st_debug = speakListToXml();
-    cout << st_debug << endl;
-#endif
 }
 
 void DataGen::handleContent(struct ccn_upcall_info *info) {
@@ -444,7 +440,6 @@ void DataGen::handleSpList(struct ccn_upcall_info *info) {
 
     string str_xml = string((const char*)value);
     loadSpeakList(str_xml);
-    debug(str_xml);
 }
 
 void DataGen::startThread() {
